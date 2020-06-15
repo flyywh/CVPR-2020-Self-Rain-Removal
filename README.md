@@ -20,3 +20,14 @@ year = {2020}
 }
 ```
 <img src="teaser/teaser_SLDNet.png" > 
+
+## Installation:
+
+1. Clone this repo
+2. Install PyTorch and dependencies from http://pytorch.org 
+
+（**Note**: the code is suitable for PyTorch 0.4.0）
+
+## Contact
+
+If you have questions, you can contact `yangwenhan@pku.edu.cn`.
