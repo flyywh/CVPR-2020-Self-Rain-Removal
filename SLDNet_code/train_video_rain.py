@@ -274,7 +274,7 @@ if __name__ == "__main__":
 
             fusion_frame_pred = frame_i3.detach()*frame_mask1 + frame_pred.detach()*frame_mask2
 
-            flow_i43 = FlowNet(frame_i4_residue, frame_i3_residue)
+            flow_i43 = FlowNet(frame_i4, frame_i3)
 
             warp_fusion_frame_pred = flow_warping(fusion_frame_pred.view(b, c, h, w), flow_i43)
             warp_fusion_frame_pred = warp_fusion_frame_pred.view(b, c, 1, h, w)
