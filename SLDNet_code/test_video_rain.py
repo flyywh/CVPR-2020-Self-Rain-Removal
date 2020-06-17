@@ -146,28 +146,20 @@ if __name__ == "__main__":
 
                 [b, c, h, w] = frame_i0.shape
 
-                frame_i0_residue = get_residue(frame_i0)
-                frame_i1_residue = get_residue(frame_i1)
-                frame_i2_residue = get_residue(frame_i2)
-                frame_i3_residue = get_residue(frame_i3)
-                frame_i4_residue = get_residue(frame_i4)
-                frame_i5_residue = get_residue(frame_i5)
-                frame_i6_residue = get_residue(frame_i6)
-
                 flow_warping = Resample2d().cuda()
 
-                flow_i30 = FlowNet(frame_i3_residue, frame_i0_residue)
+                flow_i30 = FlowNet(frame_i3, frame_i0)
                 warp_i0 = flow_warping(frame_i0, flow_i30)
-                flow_i31 = FlowNet(frame_i3_residue, frame_i1_residue)
+                flow_i31 = FlowNet(frame_i3, frame_i1)
                 warp_i1 = flow_warping(frame_i1, flow_i31)
-                flow_i32 = FlowNet(frame_i3_residue, frame_i2_residue)
+                flow_i32 = FlowNet(frame_i3, frame_i2)
                 warp_i2 = flow_warping(frame_i2, flow_i32)
 
-                flow_i34 = FlowNet(frame_i3_residue, frame_i4_residue)
+                flow_i34 = FlowNet(frame_i3, frame_i4)
                 warp_i4 = flow_warping(frame_i4, flow_i34)
-                flow_i35 = FlowNet(frame_i3_residue, frame_i5_residue)
+                flow_i35 = FlowNet(frame_i3, frame_i5)
                 warp_i5 = flow_warping(frame_i5, flow_i35)
-                flow_i36 = FlowNet(frame_i3_residue, frame_i6_residue)
+                flow_i36 = FlowNet(frame_i3, frame_i6)
                 warp_i6 = flow_warping(frame_i6, flow_i36)
 
                 warp_i0 = warp_i0.view(b, c, 1, h, w)
