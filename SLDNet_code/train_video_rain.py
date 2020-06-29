@@ -26,6 +26,27 @@ from loss import *
 from option import *
 import torch.nn.functional as F
 
+def mask_generate(frame1, frame2, b, c, h, w, th):
+    img_min = torch.min(frame1, dim=1)
+    img_min = img_min[0]
+
+    img_min2 = torch.min(frame2, dim=1)
+    img_min2 = img_min2[0]
+
+    frame_diff = img_min - img_min2
+    frame_diff[frame_diff<0] = 0
+
+    frame_mask = 1 - torch.exp(-frame_diff*frame_diff/th)
+    frame_neg_mask = 1- frame_mask
+
+    frame_neg_mask = frame_neg_mask.view(b, 1, h, w).detach()
+    frame_mask = frame_mask.view(b, 1, h, w).detach()
+
+    frame_neg_mask = torch.cat((frame_neg_mask, frame_neg_mask, frame_neg_mask), 1)
+    frame_mask = torch.cat((frame_mask, frame_mask, frame_mask), 1)
+
+    return frame_mask, frame_neg_mask
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Fast Blind Video Temporal Consistency")
@@ -254,64 +275,63 @@ if __name__ == "__main__":
             warp_i5 = warp_i5.view(b, c, 1, h, w)
             warp_i6 = warp_i6.view(b, c, 1, h, w)
 
-
-            frame_input = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), warp_i4.detach(), warp_i5.detach(), warp_i6.detach()), 2)
+            frame_input = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), frame_i3_residue.detach(), warp_i4.detach(), warp_i5.detach(), warp_i6.detach()), 2)
             frame_pred = three_dim_model(frame_input)
-            frame_i3 = frame_i3.view(b, c, 1, h, w)
-            frame_target = frame_i3
+            frame_i3_rs = frame_i3.view(b, c, 1, h, w)
+            frame_target = frame_i3_rs
 
-            frame_input2 = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), frame_pred.detach(), warp_i5.detach(), warp_i6.detach()), 2)
-            frame_mask = fusion_model(frame_input2)
+            frame_input2 = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), frame_pred.detach(), frame_i3_rs,  warp_i4.detach(), warp_i5.detach(), warp_i6.detach()), 2)
+            frame_pred_rf = texture_model(frame_input2) + frame_pred.detach()
 
-            soft_op = torch.nn.Softmax(dim=1)
-            frame_mask = soft_op(frame_mask).view(b, 1, 2, h, w)
+            frame_pred_rf = frame_pred_rf.view(b, c, h, w)
 
-            frame_mask1 = frame_mask[:, :, 0:1, :, :]
-            frame_mask2 = frame_mask[:, :, 1:2, :, :]
+            flow_i03 = FlowNet(frame_i0, frame_i3)
+            back_warp_i0 = flow_warping(frame_pred_rf, flow_i03)
 
-            frame_mask1 = torch.cat((frame_mask1, frame_mask1, frame_mask1), 1)
-            frame_mask2 = torch.cat((frame_mask2, frame_mask2, frame_mask2), 1)
+            flow_i13 = FlowNet(frame_i1, frame_i3)
+            back_warp_i1 = flow_warping(frame_pred_rf, flow_i13)
 
-            fusion_frame_pred = frame_i3.detach()*frame_mask1 + frame_pred.detach()*frame_mask2
+            flow_i23 = FlowNet(frame_i2, frame_i3)
+            back_warp_i2 = flow_warping(frame_pred_rf, flow_i23)
 
             flow_i43 = FlowNet(frame_i4, frame_i3)
+            back_warp_i4 = flow_warping(frame_pred_rf, flow_i43)
 
-            warp_fusion_frame_pred = flow_warping(fusion_frame_pred.view(b, c, h, w), flow_i43)
-            warp_fusion_frame_pred = warp_fusion_frame_pred.view(b, c, 1, h, w)
+            flow_i53 = FlowNet(frame_i5, frame_i3)
+            back_warp_i5 = flow_warping(frame_pred_rf, flow_i53)
 
-            optical_loss = loss_fn(warp_i0, frame_i3) + loss_fn(warp_i1, frame_i3) + loss_fn(warp_i2, frame_i3) + loss_fn(warp_i4, frame_i3) + loss_fn(warp_i5, frame_i3) + loss_fn(warp_i6, frame_i3)
+            flow_i63 = FlowNet(frame_i6, frame_i3)
+            back_warp_i6 = flow_warping(frame_pred_rf, flow_i63)
+
+
+            optical_loss = loss_fn(warp_i0, frame_i3_rs) + loss_fn(warp_i1, frame_i3_rs) + loss_fn(warp_i2, frame_i3_rs) + loss_fn(warp_i4, frame_i3_rs) + loss_fn(warp_i5, frame_i3_rs) + loss_fn(warp_i6, frame_i3_rs)
             optical_loss.backward()
 
-            overall_loss = loss_fn(frame_pred.view(b,c,h, w), frame_target.view(b,c,h, w).detach())
+            overall_loss = loss_fn(frame_pred, frame_target)
             overall_loss.backward()
 
-            fusion_loss = loss_fn(warp_fusion_frame_pred, frame_i4.view(b, c, 1, h, w))
-            fusion_loss.backward()
+            frame_diff = frame_i3_rs - frame_pred
+            frame_mask = 1 - torch.exp(-frame_diff*frame_diff/0.00001)
+            frame_neg_mask = 1- frame_mask
 
-            optimizer.step()
-            optimizer_flow.step()
+            frame_neg_mask = frame_neg_mask.view(b, c, h, w).detach()
+            frame_mask = frame_mask.view(b, c, h, w).detach()
 
-            error_last_inner_epoch = overall_loss.item()
-            network_time = datetime.now() - ts
+            frame_neg_m0, frame_m0 =  mask_generate(frame_i0, back_warp_i0, b, c, h, w, 0.01)
+            frame_neg_m1, frame_m1 =  mask_generate(frame_i1, back_warp_i1, b, c, h, w, 0.01)
+            frame_neg_m2, frame_m2 =  mask_generate(frame_i2, back_warp_i2, b, c, h, w, 0.01)
+            frame_neg_m4, frame_m4 =  mask_generate(frame_i4, back_warp_i4, b, c, h, w, 0.01)
+            frame_neg_m5, frame_m5 =  mask_generate(frame_i5, back_warp_i5, b, c, h, w, 0.01)
+            frame_neg_m6, frame_m6 =  mask_generate(frame_i6, back_warp_i6, b, c, h, w, 0.01)
 
-            info = "[GPU %d]: " %(opts.gpu)
-            info += "Epoch %d; Batch %d / %d; " %(three_dim_model.epoch, iteration, len(data_loader))
+            refine_loss = (1/7)*(loss_fn(back_warp_i0.view(b, c, h, w)*frame_m0, frame_i0.view(b, c, h, w)*frame_m0) + \
+                                 loss_fn(back_warp_i1.view(b, c, h, w)*frame_m1, frame_i1.view(b, c, h, w)*frame_m1) + \
+                                 loss_fn(back_warp_i2.view(b, c, h, w)*frame_m2, frame_i2.view(b, c, h, w)*frame_m2) + \
+                                 loss_fn(back_warp_i4.view(b, c, h, w)*frame_m4, frame_i4.view(b, c, h, w)*frame_m4) + \
+                                 loss_fn(back_warp_i5.view(b, c, h, w)*frame_m5, frame_i5.view(b, c, h, w)*frame_m5) + \
+                                 loss_fn(back_warp_i6.view(b, c, h, w)*frame_m6, frame_i6.view(b, c, h, w)*frame_m6)) + loss_fn(frame_pred_rf*frame_neg_mask, frame_i3*frame_neg_mask)
 
-            batch_freq = opts.batch_size / (data_time.total_seconds() + network_time.total_seconds())
-            info += "data loading = %.3f sec, network = %.3f sec, batch = %.3f Hz\n" %(data_time.total_seconds(), network_time.total_seconds(), batch_freq)
-            info += "\tmodel = %s\n" %opts.model_name
-
-            loss_writer.add_scalar('Rect Loss', overall_loss.item(), total_iter)
-            info += "\t\t%25s = %f\n" %("Rect Loss", overall_loss.item())
-
-            loss_writer.add_scalar('Fusion Loss', fusion_loss.item(), total_iter)
-            info += "\t\t%25s = %f\n" %("Fusion Loss", fusion_loss.item())
-
-            loss_writer.add_scalar('Optical Loss', optical_loss.item(), total_iter)
-            info += "\t\t%25s = %f\n" %("Optical Loss", optical_loss.item())
-
-            print(info)
-            error_last = error_last_inner_epoch
+            refine_loss.backward()
 
         utils.save_model(three_dim_model, fusion_model, FlowNet, optimizer, opts)        
 
