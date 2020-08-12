@@ -332,6 +332,31 @@ if __name__ == "__main__":
                                  loss_fn(back_warp_i6.view(b, c, h, w)*frame_m6, frame_i6.view(b, c, h, w)*frame_m6)) + loss_fn(frame_pred_rf*frame_neg_mask, frame_i3*frame_neg_mask)
 
             refine_loss.backward()
+            
+            optimizer.step()
+            optimizer_flow.step()
+
+            error_last_inner_epoch = overall_loss.item()
+            network_time = datetime.now() - ts
+
+            info = "[GPU %d]: " %(opts.gpu)
+            info += "Epoch %d; Batch %d / %d; " %(three_dim_model.epoch, iteration, len(data_loader))
+
+            batch_freq = opts.batch_size / (data_time.total_seconds() + network_time.total_seconds())
+            info += "data loading = %.3f sec, network = %.3f sec, batch = %.3f Hz\n" %(data_time.total_seconds(), network_time.total_seconds(), batch_freq)
+            info += "\tmodel = %s\n" %opts.model_name
+
+            loss_writer.add_scalar('Rect Loss', overall_loss.item(), total_iter)
+            info += "\t\t%25s = %f\n" %("Rect Loss", overall_loss.item())
+
+            loss_writer.add_scalar('Fusion Loss', refine_loss.item(), total_iter)
+            info += "\t\t%25s = %f\n" %("Fusion Loss", refine_loss.item())
+
+            loss_writer.add_scalar('Optical Loss', optical_loss.item(), total_iter)
+            info += "\t\t%25s = %f\n" %("Optical Loss", optical_loss.item())
+
+            print(info)
+            error_last = error_last_inner_epoch
 
         utils.save_model(three_dim_model, fusion_model, FlowNet, optimizer, opts)        
 
