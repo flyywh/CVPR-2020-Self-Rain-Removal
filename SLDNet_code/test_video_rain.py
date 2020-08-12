@@ -72,7 +72,7 @@ if __name__ == "__main__":
     opts.fp16 = False
 
     three_dim_model = networks.__dict__['TDModel'](opts, 3, 64)
-    fusion_model = networks.__dict__['TDModel'](opts, 2, 32)
+    fusion_model = networks.__dict__['TDModel'](opts, 3, 64)
     FlowNet = networks.FlowNet2(opts, requires_grad=False)
 
     three_dim_model.load_state_dict(state_dict['three_dim_model'])
@@ -170,28 +170,18 @@ if __name__ == "__main__":
                 warp_i6 = warp_i6.view(b, c, 1, h, w)
                 frame_i3 = frame_i3.view(1, c, 1, h, w)
 
-                frame_input = torch.cat((warp_i0, warp_i1, warp_i2, warp_i4, warp_i5, warp_i6), 2)
-                frame_target = frame_i3
+                frame_input = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), warp_i2.detach(), warp_i4.detach(), warp_i5.detach(), warp_i6.detach()), 2)
                 frame_pred = three_dim_model(frame_input)
+                frame_i3_rs = frame_i3.view(b, c, 1, h, w)
+                frame_target = frame_i3_rs
 
+                frame_input2 = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), frame_pred.detach(), frame_i3_rs,  warp_i4.detach(), warp_i5.detach()), 2)
+                frame_pred_rf = fusion_model(frame_input2) + frame_pred.detach()
 
-                frame_input2 = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), frame_pred.detach(), warp_i5.detach(), warp_i6.detach()), 2)
-                frame_mask = fusion_model(frame_input2)
+                frame_pred_rf = frame_pred_rf.view(b, c, 1, h, w)
+                frame_pred_rf = frame_pred_rf[:, :, :, 0:h-f_h_pad, 0:w-f_w_pad]
 
-                soft_op = torch.nn.Softmax(dim=1)
-                frame_mask = soft_op(frame_mask).view(b, 1, 2, h, w)
-
-                frame_mask1 = frame_mask[:, :, 0:1, :, :]
-                frame_mask2 = frame_mask[:, :, 1:2, :, :]
-
-                frame_mask1 = torch.cat((frame_mask1, frame_mask1, frame_mask1), 1)
-                frame_mask2 = torch.cat((frame_mask2, frame_mask2, frame_mask2), 1)
-
-                fusion_frame_pred = frame_i3.detach()*frame_mask1 + frame_pred.detach()*frame_mask2
-                fusion_frame_pred = frame_pred.view(b, c, 1, h, w)
-                fusion_frame_pred = fusion_frame_pred[:, :, :, 0:h-f_h_pad, 0:w-f_w_pad]
-
-            fusion_frame_pred = utils.tensor2img(fusion_frame_pred.view(1, c, h-f_h_pad, w-f_w_pad))
+            fusion_frame_pred = utils.tensor2img(frame_pred_rf.view(1, c, h-f_h_pad, w-f_w_pad))
 
             output_filename = os.path.join(output_dir, "%05d_res.png"%t)
             utils.save_img(fusion_frame_pred, output_filename)
