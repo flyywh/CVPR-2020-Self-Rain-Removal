@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
     print('===> Initializing model from %s...' %opts.three_dim_model)
     three_dim_model = networks.__dict__[opts.three_dim_model](opts, 3, 64)
-    fusion_model = networks.__dict__[opts.three_dim_model](opts, 2, 32)
+    fusion_model = networks.__dict__[opts.three_dim_model](opts, 3, 64)
 
     three_dim_model.apply(weight_init)
     fusion_model.apply(weight_init)
