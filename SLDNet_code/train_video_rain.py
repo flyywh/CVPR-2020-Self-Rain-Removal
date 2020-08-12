@@ -138,7 +138,7 @@ if __name__ == "__main__":
     opts.fp16 = False
 
     FlowNet = networks.FlowNet2(opts, requires_grad=True)
-    model_filename = os.path.join("../pretrained_models", "FlowNet2_checkpoint.pth.tar")
+    model_filename = os.path.join("./pretrained_models", "FlowNet2_checkpoint.pth.tar")
     print("===> Load %s" %model_filename)
     checkpoint = torch.load(model_filename)
     FlowNet.load_state_dict(checkpoint['state_dict'])
