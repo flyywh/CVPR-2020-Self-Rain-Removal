@@ -29,8 +29,11 @@ year = {2020}
 ## Installation
 1. Clone this repo;
 2. Install PyTorch and dependencies from http://pytorch.org;
-3. Download FLowNet V2.0 from . Put the file FlowNet2_checkpoint.pth.tar into SLDNet_code/pretrained_models;
-4. Download NTURain Dataset (Only including b1_Rain) from . For other sequences, please download them from . Unzip NTURain.zip and put the file into data_NTU/train/ and data_NTU/test/
+3. Download FLowNet V2.0 from https://pan.baidu.com/s/14xPBvYcnGjAJ2adsQOVKhA(extracted code: 3is9). 
+   Put the file FlowNet2_checkpoint.pth.tar into SLDNet_code/pretrained_models;
+4. Download NTURain Dataset (Only including b1_Rain) from https://pan.baidu.com/s/1nsBl6uhj-MWVgr1uBcsy1w(extraced code:rufg). 
+   For other sequences, please download them from https://github.com/hotndy/SPAC-SupplementaryMaterials. 
+   Unzip b1_Rain.zip and put the file into SLDNet_code/data_NTU/train/b1_Rain/ and SLDNet_code/data_NTU/test/b1_Rain/.
 
 ## Train
 
