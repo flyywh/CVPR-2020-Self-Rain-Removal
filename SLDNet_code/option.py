@@ -6,7 +6,7 @@ class item:
 opt = item()
 
 opt.checkpoint_dir = './checkpoints/P401_video_rain_self/'
-opt.data_dir = 'data_practical/'
+opt.data_dir = 'data_NTU/'
 opt.list_filename = './lists/video_rain_removal_train.txt'
 opt.test_list_filename = './lists/video_rain_removal_test.txt'
 opt.self_tag = 'P401_video_rain_self'
