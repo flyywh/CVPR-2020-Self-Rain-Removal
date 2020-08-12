@@ -20,13 +20,21 @@ year = {2020}
 }
 ```
 <img src="teaser/teaser_SLDNet.png" > 
+## Prerequisites
+- Linux or macOS
+- Python 3
+- NVIDIA GPU + CUDA cuDNN
+- PyTorch 0.4
 
-## Installation:
+## Installation
+1. Clone this repo;
+2. Install PyTorch and dependencies from http://pytorch.org;
+3. Download FLowNet V2.0 from . Put the file FlowNet2_checkpoint.pth.tar into SLDNet_code/pretrained_models;
+4. Download NTURain Dataset (Only including b1_Rain) from . For other sequences, please download them from . Unzip NTURain.zip and put the file into data_NTU/train/ and data_NTU/test/
 
-1. Clone this repo
-2. Install PyTorch and dependencies from http://pytorch.org 
+## Train
 
-（**Note**: the code is suitable for PyTorch 0.4.0）
+## Test
 
 ## Contact
 
