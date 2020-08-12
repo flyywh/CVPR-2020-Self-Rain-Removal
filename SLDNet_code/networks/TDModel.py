@@ -40,7 +40,11 @@ class TDModel(nn.Module):
         self.conv17 = nn.Conv3d(nc_ch, nc_ch, kernel_size=3, stride=1, padding=1)
         self.conv18 = nn.Conv3d(nc_ch, nc_ch, kernel_size=3, stride=1, padding=1)
 
-        self.conv19 = nn.Conv3d(nc_ch, nc_out, kernel_size=3, stride=1, padding=1)
+        self.conv19 = nn.Conv3d(nc_ch, nc_ch, kernel_size=[2, 3, 3], stride=1, padding=[0, 1, 1])
+        self.conv20 = nn.Conv3d(nc_ch, nc_ch, kernel_size=3, stride=1, padding=1)
+        self.conv21 = nn.Conv3d(nc_ch, nc_ch, kernel_size=3, stride=1, padding=1)
+
+        self.conv22 = nn.Conv3d(nc_ch, nc_out, kernel_size=3, stride=1, padding=1)
 
         self.relu = nn.ReLU(inplace=True)
 
@@ -64,7 +68,10 @@ class TDModel(nn.Module):
         F11 = self.relu(self.conv16(F10))
 
         F12 = self.relu(self.conv18(self.relu(self.conv17(F11)))+F11)
-        Y = self.conv19(F12)
+        F13 = self.relu(self.conv19(F12))
+
+        F14 = self.relu(self.conv21(self.relu(self.conv20(F13)))+F13)
+        Y = self.conv22(F14)
 
         return Y
 
