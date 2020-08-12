@@ -275,13 +275,13 @@ if __name__ == "__main__":
             warp_i5 = warp_i5.view(b, c, 1, h, w)
             warp_i6 = warp_i6.view(b, c, 1, h, w)
 
-            frame_input = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), frame_i3_residue.detach(), warp_i4.detach(), warp_i5.detach(), warp_i6.detach()), 2)
+            frame_input = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), warp_i2.detach(), warp_i4.detach(), warp_i5.detach(), warp_i6.detach()), 2)
             frame_pred = three_dim_model(frame_input)
             frame_i3_rs = frame_i3.view(b, c, 1, h, w)
             frame_target = frame_i3_rs
 
             frame_input2 = torch.cat((warp_i0.detach(), warp_i1.detach(), warp_i2.detach(), frame_pred.detach(), frame_i3_rs,  warp_i4.detach(), warp_i5.detach(), warp_i6.detach()), 2)
-            frame_pred_rf = texture_model(frame_input2) + frame_pred.detach()
+            frame_pred_rf = fusion_model(frame_input2) + frame_pred.detach()
 
             frame_pred_rf = frame_pred_rf.view(b, c, h, w)
 
