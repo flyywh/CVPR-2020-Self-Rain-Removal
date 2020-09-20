@@ -12,9 +12,9 @@ In this paper, we address the problem of rain streaks removal in video by develo
 
 ```
 @InProceedings{Yang_2020_CVPR,
-author = {Yang, Wenhan and Wang, Shiqi and Fang, Yuming and Wang, Yue and Liu, Jiaying},
-title = {From Fidelity to Perceptual Quality: A Semi-Supervised Approach for Low-Light Image Enhancement},
-booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+author = {Yang, Wenhan and Tan, Robby T. and Wang, Shiqi and Liu, Jiaying},
+title = {Self-Learning Video Rain Streak Removal: When Cyclic Consistency Meets Temporal Correspondence},
+booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
 month = {June},
 year = {2020}
 }
