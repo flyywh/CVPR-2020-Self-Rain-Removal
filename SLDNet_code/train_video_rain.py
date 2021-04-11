@@ -26,6 +26,9 @@ from loss import *
 from option import *
 import torch.nn.functional as F
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
 def mask_generate(frame1, frame2, b, c, h, w, th):
     img_min = torch.min(frame1, dim=1)
     img_min = img_min[0]
