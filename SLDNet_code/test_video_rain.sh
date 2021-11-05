@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=6 python test_video_rain.py -method P401_video_rain_self -epoch 3 -dataset Video_rain -task RainRemoval/original -data_dir data_NTU -model_name derain_self -checkpoint_dir ./checkpoints/P401_video_rain_self/ -list_filename ./lists/video_rain_removal_test.tx
+CUDA_VISIBLE_DEVICES=6 python test_video_rain.py -method P401_video_rain_self -epoch 75 -dataset Video_rain -task RainRemoval/original -data_dir data_NTU -model_name derain_self -checkpoint_dir ./checkpoints/P401_video_rain_self/ -list_filename ./lists/video_rain_removal_test.tx
